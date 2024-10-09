@@ -1,87 +1,48 @@
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const canvasCtx = canvas.getContext('2d');
 
-const video = document.getElementById("video")
-
-Promise.all([ 
-  faceapi.nets.tinyFaceDetector.loadFromUri("./models"), //カメラの中の顔を探すmodule
-  faceapi.nets.faceLandmark68Net.loadFromUri("./models"), //目、鼻、口を探すmodule
-  faceapi.nets.faceRecognitionNet.loadFromUri("./models"), //顔付きボックス
-  faceapi.nets.faceExpressionNet.loadFromUri("./models"), //表情を判断するmodule
-  faceapi.nets.ageGenderNet.loadFromUri("./models"), //年齢性別を判断するmodule 
-]).then(startVideo);
-
-function startVideo() {
-    navigator.mediaDevices.getUserMedia({ video: true })
-    .then(function(stream){
-        video.srcObject = stream;
-    })
-    .catch(function(err){
-        console.log(err);
-    });
-
+function onResults(results) {
+  canvasCtx.save();
+  canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+  canvasCtx.drawImage(
+      results.image, 0, 0, canvas.width, canvas.height);
+  if (results.multiFaceLandmarks) {
+    for (const landmarks of results.multiFaceLandmarks) {
+      drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION, {color: '#C0C0C070', lineWidth: 1});
+      drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_EYE, {color: '#C0C0C070'});
+      drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_EYEBROW, {color: '#C0C0C070'});
+      drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_EYE, {color: '#C0C0C070'});
+      drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_EYEBROW, {color: '#C0C0C070'});
+      drawConnectors(canvasCtx, landmarks, FACEMESH_FACE_OVAL, {color: '#E0E0E0', lineWidth: 0.5});
+      drawConnectors(canvasCtx, landmarks, FACEMESH_LIPS, {color: '#E0E0E0'});
+    }
+  }
+  canvasCtx.restore();
 }
 
-video.addEventListener("play", () => {
-
-  const canvas = faceapi.createCanvasFromMedia(video);
-  document.body.append(canvas);
-  const displaySize = { width: video.width, height: video.height };
-
-  faceapi.matchDimensions(canvas, displaySize);
-  // 画像をcnavas上に表示する
-  const image = document.createElement("img");
-  setInterval(async () => {
-    const detections = await faceapi
-      .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()) //カメラの中にいる顔をすべて認識
-      .withFaceLandmarks() //目、鼻、口を探す
-      .withFaceExpressions() ////表情を判断する
-      .withAgeAndGender(); //年齢性別を判断する
-
-    const resizedDetections = faceapi.resizeResults(detections, displaySize);
-    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height); //顔に付いて回るボックス
-    // faceapi.draw.drawDetections(canvas, resizedDetections); //顔に箱付きの表現
-    // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections); //目鼻口点線表現
-    // faceapi.draw.drawFaceExpressions(canvas, resizedDetections); //感情情報表現
-    
-    resizedDetections.forEach((detection) => {
-      
-      const ctx = canvas.getContext("2d");
-      const height = canvas.getAttribute("height");
-      const width = canvas.getAttribute("width");
-      const imgWidth = width * 0.5;
-      const imgHeight = height * 0.6;
-      //年齢、性別表現ボックス
-      const box = detection.detection.box;
-      ctx.drawImage(image, box._x-50, box._y-100, imgWidth, imgHeight); 
-
-/**
- *  非表示
-   const drawBox = new faceapi.draw.DrawBox(box, {
-    label: Math.round(detection.age) + " year old " + detection.gender,
-  });
-  drawBox.draw(canvas);
-
- */
-
-      const Array = Object.entries(detection.expressions);
-      const scoresArray = Array.map((i) => i[1]);
-      const expressionsArray = Array.map((i) => i[0]);
-
-      // 各表情の点数を比較・Maxを取得
-      const scoreMax = Math.max.apply(null, scoresArray);
-      // Maxの配列でのインデックスを取得。表情が格納された配列からインデックスで表情を取得
-      const idx = scoresArray.findIndex((i) => i === scoreMax);
-      const expression = expressionsArray[idx];
-
-      const posX = box._x - 50;
-      const posY = box._y - 100;
-      image.src = `./img/${expression}.jpg`;
-      ctx.drawImage(image, posX, posY, imgWidth, imgHeight); 
-
-    });
-  }, 100);
-    
-
+const faceMesh = new FaceMesh({locateFile: (file) => {
+  return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+}});
+faceMesh.setOptions({
+  maxNumFaces: 1,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5
 });
+faceMesh.onResults(onResults);
+
+const camera = new Camera(video, {
+  onFrame: async () => {
+    await faceMesh.send({image: video});
+  },
+  width: 1280,
+  height: 720
+});
+camera.start();
+
+
+
+
 
 
 

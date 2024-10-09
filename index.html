@@ -5,9 +5,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Face Detection</title>
-    <script defer src="face-api.min.js"></script>
+    <title>DEMO</title>
     <script defer src="main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <style>
       body {
         margin: 0;
@@ -26,7 +29,8 @@
     </style>
   </head>
   <body>
-    <video id="video" width="720" height="560" autoplay muted></video>
+    <video id="video"></video>
+    <canvas id="canvas" width="1280px" height="720px"></canvas>
   </body>
 </html>
 
