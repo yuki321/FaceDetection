@@ -1,7 +1,16 @@
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const canvasCtx = canvas.getContext('2d');
+let width = 720;
+let height = 560;
+var video_width = document.body.offsetWidth;
+var video_height = document.body.offsetHeight;
 
+if ( video_width < video_height ){
+    width = 560
+    height = 720;
+  }
+  
 
 function onResults(results) {
   canvasCtx.save();
@@ -75,8 +84,8 @@ const camera = new Camera(video, {
   onFrame: async () => {
     await faceMesh.send({image: video});
   },
-  width: 720,
-  height: 560
+  width: width,
+  height: height
 });
 camera.start();
 
