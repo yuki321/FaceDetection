@@ -2,6 +2,14 @@ const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const canvasCtx = canvas.getContext('2d');
 
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(function(stream){
+    video.srcObject = stream;
+})
+.catch(function(err){
+    console.log(err);
+});
+
 function onResults(results) {
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
