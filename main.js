@@ -2,13 +2,21 @@ const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const canvasCtx = canvas.getContext('2d');
 
-navigator.mediaDevices.getUserMedia({ video: true })
-.then(function(stream){
-    video.srcObject = stream;
-})
-.catch(function(err){
-    console.log(err);
-});
+Promise.all([ 
+
+]).then(startVideo);
+
+function startVideo() {
+  navigator.mediaDevices.getUserMedia({ video: true })
+  .then(function(stream){
+      video.srcObject = stream;
+  })
+  .catch(function(err){
+      console.log(err);
+  });
+
+}
+
 
 function onResults(results) {
   canvasCtx.save();
